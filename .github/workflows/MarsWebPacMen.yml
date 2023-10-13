@@ -22,10 +22,12 @@ jobs:
       run:  dotnet restore "src/${{ env.WORKING_DIRECTORY }}"
     - name: Build
       run: dotnet build "$src/{{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore
-    - name: Test
-      run: dotnet test "${{ env.WORKING_DIRECTORY }}" --no-build
-    - name: Publish
-      run: dotnet publish "$src/{{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-build --output "${{ env.AZURE_WEBAPP_PACKAGE_PATH }}"
+    - name: Run Tests
+      working-directory: src
+      run: dotnet test MarsRover.sln
+    - name: dotnet publish
+      working-directory: src/Mars.Web
+      run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
     - name: Publish Artifacts
       uses: actions/upload-artifact@v3
       with:

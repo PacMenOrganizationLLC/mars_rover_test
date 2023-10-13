@@ -3,46 +3,49 @@ on:
   push:
     branches:
     - main
-env:
-  AZURE_WEBAPP_NAME: MarsWebPacMen
-  AZURE_WEBAPP_PACKAGE_PATH: Mars.Web/publish
-  CONFIGURATION: Release
-  DOTNET_CORE_VERSION: 7.0.x
-  WORKING_DIRECTORY: Mars.Web
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Setup .NET SDK
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
-    - name: Restore
-      run:  dotnet restore "src/${{ env.WORKING_DIRECTORY }}"
-    - name: Run Tests
-      working-directory: src
-      run: dotnet test MarsRover.sln
-    - name: dotnet publish
-      working-directory: src/Mars.Web
-      run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
 
-    - name: Upload artifact for deployment job
-      uses: actions/upload-artifact@v2
-      with:
-        name: .net-app
-        path: ${{env.DOTNET_ROOT}}/myapp
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
     steps:
-    - name: Download artifact from build job
-      uses: actions/download-artifact@v3
-      with:
-        name: .net-app
-    - name: Deploy to Azure WebApp
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: ${{ env.AZURE_WEBAPP_NAME }}
-        publish-profile: ${{ secrets.MarsWebPacMen_453D }}
-        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+      - uses: actions/checkout@v2
+
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '7.x'
+          include-prerelease: true
+
+      - name: Run Tests
+        working-directory: src
+        run: dotnet test MarsRover.sln
+
+      - name: dotnet publish
+        working-directory: src/Mars.Web
+        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v2
+        with:
+          name: .net-app
+          path: ${{env.DOTNET_ROOT}}/myapp
+  deploy-to-prod:
+    name: Deploy to production
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: 'Production'
+      url: 'https://${{ env.WEBAPP_NAME }}.azurewebsites.net/'
+
+    steps:
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v2
+        with:
+          name: .net-app
+  
+      - name: Deploy to production env
+        uses: azure/webapps-deploy@v2
+        id: deploy-to-production
+        with:
+          app-name: ${{ env.WEBAPP_NAME }}
+          package: .         

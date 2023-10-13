@@ -3,49 +3,46 @@ on:
   push:
     branches:
     - main
+env:
+  AZURE_WEBAPP_NAME: MarsWebPacMen
+  AZURE_WEBAPP_PACKAGE_PATH: Mars.Web/publish
+  CONFIGURATION: Release
+  DOTNET_CORE_VERSION: 7.0.x
+  WORKING_DIRECTORY: Mars.Web
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v2
-
-      - name: Set up .NET Core
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '7.x'
-          include-prerelease: true
-
-      - name: Run Tests
-        working-directory: src
-        run: dotnet test MarsRover.sln
-
-      - name: dotnet publish
-        working-directory: src/Mars.Web
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
-
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v2
-        with:
-          name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
-  deploy-to-prod:
-    name: Deploy to production
-    needs: build
+    - uses: actions/checkout@v3
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: ${{ env.DOTNET_CORE_VERSION }}
+    - name: Restore
+      run: dotnet restore "${{ env.WORKING_DIRECTORY }}"
+    - name: Build
+      run: dotnet build "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-restore
+    - name: Test
+      run: dotnet test "${{ env.WORKING_DIRECTORY }}" --no-build
+    - name: Publish
+      run: dotnet publish "${{ env.WORKING_DIRECTORY }}" --configuration ${{ env.CONFIGURATION }} --no-build --output "${{ env.AZURE_WEBAPP_PACKAGE_PATH }}"
+    - name: Publish Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: webapp
+        path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+  deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: 'Production'
-      url: 'https://${{ env.WEBAPP_NAME }}.azurewebsites.net/'
-
+    needs: build
     steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v2
-        with:
-          name: .net-app
-  
-      - name: Deploy to production env
-        uses: azure/webapps-deploy@v2
-        id: deploy-to-production
-        with:
-          app-name: ${{ env.WEBAPP_NAME }}
-          package: .         
+    - name: Download artifact from build job
+      uses: actions/download-artifact@v3
+      with:
+        name: webapp
+        path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+    - name: Deploy to Azure WebApp
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: ${{ env.AZURE_WEBAPP_NAME }}
+        publish-profile: ${{ secrets.MarsWebPacMen_0167 }}
+        package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}

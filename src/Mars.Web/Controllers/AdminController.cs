@@ -54,6 +54,29 @@ public class AdminController : ControllerBase
 
 		return Problem("Invalid GameID", statusCode: 400, title: "Invalid Game ID");
 	}
+
+	[HttpGet("config")]
+	public ActionResult<List<GameConfigTemplate>> getGameConfigTemplate()
+	{
+		var sampleData = new List<GameConfigTemplate>
+		{
+			new("test", "data"),
+			new("more", "data")
+		};
+
+		return Ok(sampleData);
+	}
+
+	public class GameConfigTemplate
+	{
+		public string Key { get; set; }
+		public string Value { get; set; }
+		public GameConfigTemplate(string key, string value)
+		{
+			Key = key;
+			Value = value;
+		}
+	}
 }
 
 /// <summary>

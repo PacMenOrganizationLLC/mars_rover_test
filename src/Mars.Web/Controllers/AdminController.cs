@@ -60,8 +60,8 @@ public class AdminController : ControllerBase
 	{
 		var sampleData = new List<GameConfigTemplate>
 		{
-			new("startBatteryLevel", "200000"),
-			new("rechargeRate", "4000000")
+			new("RechargePointsPerSecond", "20"),
+			new("Password", "password")
 		};
 
 		return Ok(sampleData);

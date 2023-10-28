@@ -1,3 +1,4 @@
+using Mars.Web.Components;
 using Microsoft.Extensions.Options;
 
 namespace Mars.Web.Controllers;
@@ -12,6 +13,7 @@ public class AdminController : ControllerBase
 	private readonly GameConfig gameConfig;
 	private readonly ILogger<AdminController> logger;
 	private readonly MultiGameHoster gameHoster;
+	private bool isMakingNewGame = false;
 
 	public AdminController(IOptions<GameConfig> gameConfigOptions, ILogger<AdminController> logger, MultiGameHoster gameHoster)
 	{
@@ -54,6 +56,24 @@ public class AdminController : ControllerBase
 
 		return Problem("Invalid GameID", statusCode: 400, title: "Invalid Game ID");
 	}
+
+	[HttpPost("createSession")]
+	public string MakeNewGame()
+	{
+		if (isMakingNewGame == false)
+		{
+			isMakingNewGame = true;
+			string gameId = gameHoster.MakeNewGame();
+			isMakingNewGame = false;
+			return gameId;
+		}
+		else
+		{
+			Thread.Sleep(10000);
+			return MakeNewGame();
+		}
+	}
+
 }
 
 /// <summary>

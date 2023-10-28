@@ -74,6 +74,29 @@ public class AdminController : ControllerBase
 		}
 	}
 
+
+	[HttpGet("config")]
+	public ActionResult<List<GameConfigTemplate>> getGameConfigTemplate()
+	{
+		var sampleData = new List<GameConfigTemplate>
+		{
+			new("RechargePointsPerSecond", "20"),
+			new("Password", "password")
+		};
+
+		return Ok(sampleData);
+	}
+
+	public class GameConfigTemplate
+	{
+		public string Key { get; set; }
+		public string Value { get; set; }
+		public GameConfigTemplate(string key, string value)
+		{
+			Key = key;
+			Value = value;
+		}
+	}
 }
 
 /// <summary>

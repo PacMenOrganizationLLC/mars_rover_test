@@ -158,5 +158,5 @@ public class StartGameRequest
 	/// <summary>
 	/// Which game instance you are starting/connecting to
 	/// </summary>
-	public required string GameID { get; set; }
+//	public required string GameID { get; set; }
 }

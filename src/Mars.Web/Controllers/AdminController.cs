@@ -32,18 +32,48 @@ public class AdminController : ControllerBase
 	[HttpPost("[action]")]
 	[ProducesResponseType(typeof(string), 200)]
 	[ProducesResponseType(typeof(ProblemDetails), 400)]
-	public IActionResult StartGame(StartGameRequest request)
+	public IActionResult StartGame(StartGameRequest request, [FromQuery] string sessionId)
 	{
 		if (request.Password != gameConfig.Password)
 			return Problem("Invalid password", statusCode: 400, title: "Cannot start game with invalid password.");
 
-		if (gameHoster.Games.TryGetValue(request.GameID, out var gameManager))
+		if (gameHoster.Games.TryGetValue(sessionId, out var gameManager))
 		{
 			try
 			{
 				var gamePlayOptions = new GamePlayOptions
 				{
 					RechargePointsPerSecond = request.RechargePointsPerSecond,
+				};
+				logger.LogInformation("Starting game play via admin api");
+
+				gameManager.Game.PlayGame(gamePlayOptions);
+				return Ok("Game started OK");
+			}
+			catch (Exception ex)
+			{
+				return Problem(ex.Message, statusCode: 400, title: "Error starting game");
+			}
+		}
+
+		return Problem("Invalid GameID", statusCode: 400, title: "Invalid Game ID");
+	}
+
+	[HttpPost("startGame")]
+	[ProducesResponseType(typeof(string), 200)]
+	[ProducesResponseType(typeof(ProblemDetails), 400)]
+	public IActionResult StartGame([FromQuery] string password, [FromQuery] string gameID, [FromQuery] int rechargePointsPerSecond)
+	{
+		if (password != gameConfig.Password)
+			return Problem("Invalid password", statusCode: 400, title: "Cannot start game with invalid password.");
+
+		if (gameHoster.Games.TryGetValue(gameID, out var gameManager))
+		{
+			try
+			{
+				var gamePlayOptions = new GamePlayOptions
+				{
+					RechargePointsPerSecond = rechargePointsPerSecond,
 				};
 				logger.LogInformation("Starting game play via admin api");
 

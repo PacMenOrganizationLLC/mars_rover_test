@@ -60,16 +60,27 @@ public class AdminController : ControllerBase
 	[HttpPost("createSession")]
 	public string MakeNewGame()
 	{
-		if (isMakingNewGame == false)
+		if (!isMakingNewGame)
 		{
 			isMakingNewGame = true;
 			string gameId = gameHoster.MakeNewGame();
 			isMakingNewGame = false;
-			return gameId;
+
+			// Creating a JSON object
+			var jsonObject = new
+			{
+				GameId = gameId,
+				GameUrl = "https://marswebpacmen.azurewebsites.net/game/"+gameId
+			};
+
+			// Converting JSON object to string
+			string jsonString = JsonSerializer.Serialize(jsonObject);
+
+			return jsonString;
 		}
 		else
 		{
-			Thread.Sleep(10000);
+			Thread.Sleep(5000);
 			return MakeNewGame();
 		}
 	}

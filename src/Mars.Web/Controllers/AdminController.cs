@@ -102,7 +102,7 @@ public class AdminController : ControllerBase
 			var jsonObject = new
 			{
 				GameId = gameId,
-				GameUrl = "https://marswebpacmen.azurewebsites.net/game/"+gameId
+				GameUrl = "https://marswebpacmen.azurewebsites.net/game/" + gameId
 			};
 
 			// Converting JSON object to string
@@ -130,6 +130,31 @@ public class AdminController : ControllerBase
 		return Ok(sampleData);
 	}
 
+	[HttpGet("scoreboard")]
+	public ActionResult<List<SessionScoreboard>> getScoreboard(string playId)
+	{
+		gameHoster.Games.TryGetValue(playId, out var gameManager);
+
+		if (gameManager.Game.GameState == GameState.GameOver)
+		{
+			var winners = gameManager.Game.Winners.OrderBy(w => w.WinningTime).ToList();
+			var scoreboard = new List<SessionScoreboard>();
+
+			for (int i = 0; i < winners.Count; i++)
+			{
+				scoreboard.Add(new SessionScoreboard
+				{
+					PlayerName = winners[i].Name,
+					Rank = i + 1
+				});
+			}
+
+			return Ok(scoreboard);
+		}
+
+		return BadRequest("Game is not over yet");
+	}
+
 	public class GameConfigTemplate
 	{
 		public string Key { get; set; }
@@ -139,6 +164,15 @@ public class AdminController : ControllerBase
 			Key = key;
 			Value = value;
 		}
+	}
+
+	public class SessionScoreboard
+	{
+		public int Id { get; set; }
+		public int SessionId { get; set; }
+		public string PlayerName { get; set; }
+		public int Rank { get; set; }
+		public int? Score { get; set; }
 	}
 }
 
@@ -158,5 +192,5 @@ public class StartGameRequest
 	/// <summary>
 	/// Which game instance you are starting/connecting to
 	/// </summary>
-//	public required string GameID { get; set; }
+	//	public required string GameID { get; set; }
 }

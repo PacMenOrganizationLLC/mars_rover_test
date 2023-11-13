@@ -131,9 +131,9 @@ public class AdminController : ControllerBase
 	}
 
 	[HttpGet("scoreboard")]
-	public ActionResult<List<SessionScoreboard>> getScoreboard(string playId)
+	public ActionResult<List<SessionScoreboard>> getScoreboard(string game_id)
 	{
-		gameHoster.Games.TryGetValue(playId, out var gameManager);
+		gameHoster.Games.TryGetValue(game_id, out var gameManager);
 
 		if (gameManager.Game.GameState == GameState.GameOver)
 		{
